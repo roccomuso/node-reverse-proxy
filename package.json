@@ -1,0 +1,35 @@
+{
+  "name": "reverse-proxy",
+  "version": "1.0.0",
+  "description": "http reverse proxy supporting virtual hosts",
+  "main": "index.js",
+  "dependencies": {
+    "connect": "^3.6.6",
+    "http-proxy": "^1.17.0",
+    "signale": "^1.2.1",
+    "treeify": "^1.1.0",
+    "vhost": "^3.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/roccomuso/node-reverse-proxy.git"
+  },
+  "keywords": [
+    "http",
+    "reverse",
+    "proxy",
+    "virtual",
+    "host",
+    "node"
+  ],
+  "author": "Rocco Musolino (@roccomuso)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/roccomuso/node-reverse-proxy/issues"
+  },
+  "homepage": "https://github.com/roccomuso/node-reverse-proxy#readme"
+}
