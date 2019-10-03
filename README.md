@@ -1,2 +1,2 @@
 # node-reverse-proxy
-Node.js reverse proxy boilerplate (supporting virtual host)
+Node.js reverse http proxy boilerplate (supporting virtual host)
