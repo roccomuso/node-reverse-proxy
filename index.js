@@ -18,28 +18,28 @@ const app = connect()
 //
 
 // Logging middleware
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
   console.log(treeify.asTree(req.headers, true))
   next()
 })
 
 // domain A
-app.use(vhost('my-site-a.com', function (req, res) {
+app.use(vhost('my-site-a.com', (req, res) => {
   signale.success('Matched my-site-a.com')
   proxy.web(req, res, { target: 'http://127.0.0.1:3001' })
 }))
 
 // domain B
-app.use(vhost('my-other-site.com', function (req, res) {
+app.use(vhost('my-other-site.com', (req, res) => {
   signale.success('Matched my-other-site.com')
   proxy.web(req, res, { target: 'http://127.0.0.1:3002' })
 }))
 
 // 404
-app.use(function (req, res) {
+app.use((req, res) => {
   signale.error(`404 host not found: ${req.host}`)
   res.setHeader('Content-Type', 'text/html')
-  res.end('<h2>Nothing to see here</h2>')
+  res.end('<h2>Nothing found</h2>')
 })
 
 const server = http.createServer(app)
