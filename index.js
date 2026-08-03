@@ -8,9 +8,17 @@ function getHostname (req) {
   return (req.headers.host || '').split(':')[0].toLowerCase()
 }
 
-// Find the route matching a given hostname
+// Find the route matching a given hostname. A route host of `*.example.com`
+// matches any subdomain (www.example.com, api.example.com, ...) but not the
+// bare `example.com` itself — add a separate exact route for that if needed.
 function findRoute (routes, hostname) {
-  return routes.find((route) => route.host === hostname)
+  return routes.find((route) => {
+    if (route.host.startsWith('*.')) {
+      const base = route.host.slice(2)
+      return hostname !== base && hostname.endsWith(`.${base}`)
+    }
+    return route.host === hostname
+  })
 }
 
 // Without an 'error' listener, http-proxy rethrows and crashes the whole
@@ -33,7 +41,8 @@ function handleProxyError (err, req, res, silent) {
  *
  * @param {object} [config]
  * @param {{host: string, target: string}[]} [config.routes] - domain -> target mappings, e.g.
- *   [{ host: 'my-site-a.com', target: 'http://127.0.0.1:3001' }]
+ *   [{ host: 'my-site-a.com', target: 'http://127.0.0.1:3001' }]. A host of `*.example.com`
+ *   matches any subdomain but not the bare `example.com` — add that separately if needed.
  * @param {number} [config.port] - default port used by `.listen()` when called with no argument
  *   (falls back to the `PORT` env var, then 80)
  * @param {boolean} [config.logRequests] - log every request's headers (default: false)
@@ -93,7 +102,7 @@ function createProxy (config = {}) {
 
     addRoute (host, target) {
       const hostname = host.toLowerCase()
-      const existing = findRoute(routes, hostname)
+      const existing = routes.find((route) => route.host === hostname)
       if (existing) {
         existing.target = target
       } else {

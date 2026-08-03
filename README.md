@@ -67,6 +67,17 @@ proxy.addRoute('new-site.com', 'http://127.0.0.1:3003')
 proxy.removeRoute('my-site-a.com')
 ```
 
+### Wildcard subdomains
+
+A route host of `*.example.com` matches any subdomain (`www.example.com`, `api.example.com`, ...) but **not** the bare `example.com` — add that as its own exact route if you need it too:
+
+```js
+routes: [
+  { host: '*.example.com', target: 'http://127.0.0.1:3001' },
+  { host: 'example.com', target: 'http://127.0.0.1:3001' }
+]
+```
+
 ## Graceful shutdown
 
 The library never registers process-wide signal handlers on your behalf. Wire up your own, e.g.:
