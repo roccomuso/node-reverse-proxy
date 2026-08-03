@@ -1,6 +1,6 @@
 const http = require('node:http')
 const test = require('tape')
-const { createServer } = require('../index')
+const createProxy = require('../index')
 
 // Starts a plain HTTP server on an ephemeral port that always replies with `body`.
 function startBackend (body) {
@@ -40,7 +40,7 @@ function request (port, host) {
 let backendA
 let backendB
 let downPort
-let proxyServer
+let proxy
 let proxyPort
 
 test('setup', async (t) => {
@@ -48,26 +48,23 @@ test('setup', async (t) => {
   backendB = await startBackend('B')
   downPort = await getUnusedPort()
 
-  const routes = [
-    { host: 'my-site-a.com', target: `http://127.0.0.1:${backendA.address().port}` },
-    { host: 'my-other-site.com', target: `http://127.0.0.1:${backendB.address().port}` },
-    { host: 'down-site.com', target: `http://127.0.0.1:${downPort}` }
-  ]
+  proxy = createProxy({
+    silent: true,
+    routes: [
+      { host: 'my-site-a.com', target: `http://127.0.0.1:${backendA.address().port}` },
+      { host: 'down-site.com', target: `http://127.0.0.1:${downPort}` }
+    ]
+  })
 
-  proxyServer = createServer(routes)
-  await new Promise((resolve) => proxyServer.listen(0, '127.0.0.1', resolve))
-  proxyPort = proxyServer.address().port
+  await new Promise((resolve) => proxy.listen(0, resolve))
+  proxyPort = proxy.server.address().port
   t.end()
 })
 
 test('routes requests to the backend matching the Host header', async (t) => {
-  const resA = await request(proxyPort, 'my-site-a.com')
-  t.equal(resA.statusCode, 200)
-  t.equal(resA.body, 'A')
-
-  const resB = await request(proxyPort, 'my-other-site.com')
-  t.equal(resB.statusCode, 200)
-  t.equal(resB.body, 'B')
+  const res = await request(proxyPort, 'my-site-a.com')
+  t.equal(res.statusCode, 200)
+  t.equal(res.body, 'A')
   t.end()
 })
 
@@ -90,9 +87,38 @@ test('returns 502 when the target backend is unreachable, without crashing the s
   t.end()
 })
 
+test('addRoute registers a new domain -> target mapping at runtime', async (t) => {
+  const res = await request(proxyPort, 'my-other-site.com')
+  t.equal(res.statusCode, 404)
+
+  proxy.addRoute('my-other-site.com', `http://127.0.0.1:${backendB.address().port}`)
+
+  const res2 = await request(proxyPort, 'my-other-site.com')
+  t.equal(res2.statusCode, 200)
+  t.equal(res2.body, 'B')
+  t.end()
+})
+
+test('addRoute overwrites the target of an existing route', async (t) => {
+  proxy.addRoute('my-other-site.com', `http://127.0.0.1:${backendA.address().port}`)
+
+  const res = await request(proxyPort, 'my-other-site.com')
+  t.equal(res.statusCode, 200)
+  t.equal(res.body, 'A')
+  t.end()
+})
+
+test('removeRoute stops routing a domain', async (t) => {
+  proxy.removeRoute('my-other-site.com')
+
+  const res = await request(proxyPort, 'my-other-site.com')
+  t.equal(res.statusCode, 404)
+  t.end()
+})
+
 test('teardown', async (t) => {
   await Promise.all([
-    new Promise((resolve) => proxyServer.close(resolve)),
+    new Promise((resolve) => proxy.close(resolve)),
     new Promise((resolve) => backendA.close(resolve)),
     new Promise((resolve) => backendB.close(resolve))
   ])
