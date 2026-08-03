@@ -1,6 +1,6 @@
 {
   "name": "vhost-reverse-proxy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Domain-based (virtual host) reverse HTTP proxy library for Node.js",
   "main": "index.js",
   "files": [
