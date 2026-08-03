@@ -1,18 +1,30 @@
 {
-  "name": "reverse-proxy",
+  "name": "vhost-reverse-proxy",
   "version": "1.0.0",
   "description": "http reverse proxy supporting virtual hosts",
   "main": "index.js",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
-    "connect": "^3.6.6",
+    "connect": "^3.7.0",
     "http-proxy": "^1.18.1",
-    "signale": "^1.2.1",
+    "signale": "^1.4.0",
     "treeify": "^1.1.0",
     "vhost": "^3.0.2"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "standard": "^17.1.2",
+    "tape": "^5.10.2"
+  },
+  "resolutions": {
+    "follow-redirects": "^1.16.0"
+  },
   "scripts": {
-    "test": "standard"
+    "start": "node index.js",
+    "lint": "standard",
+    "test": "tape __tests__/*.test.js",
+    "pretest": "standard"
   },
   "repository": {
     "type": "git",
