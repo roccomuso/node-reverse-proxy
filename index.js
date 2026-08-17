@@ -29,8 +29,15 @@ function handleProxyError (err, req, res, silent) {
   if (typeof res.writeHead === 'function') {
     if (!res.headersSent) {
       res.writeHead(502, { 'Content-Type': 'text/html' })
+      res.end('<h2>Bad gateway</h2>')
+    } else if (!res.destroyed) {
+      // Headers (and possibly part of the body) were already sent, so we
+      // can't write a clean error page without corrupting the response
+      // (mismatched Content-Length/chunked framing forces Node to reset
+      // the socket, which surfaces to the client as ERR_CONNECTION_RESET).
+      // Just end the stream as-is.
+      res.end()
     }
-    res.end('<h2>Bad gateway</h2>')
   } else if (!res.destroyed) {
     res.destroy()
   }
