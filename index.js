@@ -61,7 +61,7 @@ function createProxy (config = {}) {
   const logRequests = Boolean(config.logRequests)
   const silent = Boolean(config.silent)
 
-  const proxy = httpProxy.createProxyServer({})
+  const proxy = httpProxy.createProxyServer({ timeout: 30000, proxyTimeout: 15000 })
   proxy.on('error', (err, req, res) => handleProxyError(err, req, res, silent))
 
   const server = http.createServer((req, res) => {
@@ -80,6 +80,11 @@ function createProxy (config = {}) {
     if (!silent) signale.success(`Matched ${route.host} -> ${route.target}`)
     proxy.web(req, res, { target: route.target })
   })
+
+  // Bound how long a client (including scanners that open a socket and idle)
+  // can take to send a request, down from Node's defaults of 60s/300s.
+  server.headersTimeout = 20000
+  server.requestTimeout = 30000
 
   // Proxy WebSocket upgrade requests (e.g. socket.io, HMR) using the same routes
   server.on('upgrade', (req, socket, head) => {
